@@ -1,0 +1,43 @@
+{
+  "feature_cols": [
+    "Age",
+    "IsMale",
+    "LoanAmount",
+    "LoanAmount_log",
+    "Tenor",
+    "LoanMonthlyInstallment",
+    "Installment_log",
+    "IsTopup",
+    "ContractualRate",
+    "Rate",
+    "ManagementFee",
+    "Monthly Maintenance Fee",
+    "LoanAgeMonths",
+    "RemainingMonths",
+    "ProgressRatio",
+    "InterestToLoan",
+    "LoanValueToAmount",
+    "TotalCollectableRatio",
+    "MonthlyBurden",
+    "MaintenanceFeeRatio",
+    "DeductionsRatio",
+    "LoanValue",
+    "LoanValue_log",
+    "Total Collectable",
+    "InterestTillDate",
+    "TotalInterest",
+    "DeductionsTillDate",
+    "ActualDTD",
+    "ActualVsExpected",
+    "Cummulative Maintenance Fee"
+  ],
+  "risk_labels": {
+    "0": "Low Risk",
+    "1": "Medium Risk",
+    "2": "High Risk"
+  },
+  "model_name": "XGBoost",
+  "test_f1_macro": 0.9888,
+  "test_auc_ovr": 0.9998,
+  "today_ref": "2026-06-01"
+}
