@@ -7,7 +7,7 @@ import os
 from datetime import datetime
 
 st.set_page_config(
-    page_title="Credit Risk Early Warning System",
+    page_title="CreditSense - Credit Risk Early Warning System",
     page_icon="🏦",
     layout="centered"
 )
@@ -42,10 +42,17 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 }
 .result-title { font-size: 1.7rem; font-weight: 700; margin: 0.4rem 0; }
 .result-sub   { font-size: 0.9rem; margin-top: 0.3rem; }
+.cbn-badge {
+    display: inline-block; padding: 4px 14px; border-radius: 20px;
+    font-size: 0.8rem; font-weight: 600; margin-top: 0.5rem;
+}
+.cbn-low    { background: #c6f6d5; color: #276749; }
+.cbn-medium { background: #fef3c7; color: #92400e; }
+.cbn-high   { background: #fed7d7; color: #c53030; }
 .rec-box {
     background: #f8fafc; border: 1px solid #e2e8f0;
     border-radius: 10px; padding: 1rem 1.2rem;
-    margin-top: 1rem; font-size: 0.9rem; line-height: 1.6;
+    margin-top: 1rem; font-size: 0.9rem; line-height: 1.6; text-align: left;
 }
 .metric-row { display: flex; gap: 0.8rem; margin-top: 1rem; flex-wrap: wrap; }
 .metric-box {
@@ -55,7 +62,6 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 }
 .metric-label { font-size: 0.68rem; color: #718096; text-transform: uppercase; letter-spacing: 0.05em; }
 .metric-value { font-size: 1.25rem; font-weight: 700; color: #1a365d; margin-top: 2px; }
-.prob-bar-wrap { margin-top: 1rem; }
 .prob-label { font-size: 0.8rem; color: #4a5568; margin-bottom: 3px; display: flex; justify-content: space-between; }
 .stButton > button {
     background: linear-gradient(135deg, #1a4a7a, #0d2137) !important;
@@ -124,87 +130,88 @@ def build_features(age, is_male, loan_amount, tenor, monthly_installment,
     return pd.DataFrame([row])[FEATURE_COLS]
 
 
-# ── HERO ─────────────────────────────────────────────────
+# HERO
 st.markdown("""
 <div class="hero">
   <div style="font-size:2.2rem; margin-bottom:0.4rem;">🏦</div>
-  <h1>Credit Risk Early Warning System</h1>
-  <p>Nigerian Bank Loan Portfolio · XGBoost · 3-Class Risk Classification<br>
-  Trained on 3,509 real loan records · AUC 0.9998 · F1 0.9888</p>
+  <h1>CreditSense</h1>
+  <p>Credit Risk Early Warning System for Nigerian Consumer Lending<br>
+  XGBoost · CBN Loan Classification · Trained on 3,509 Real Loan Records<br>
+  AUC 0.9998 · F1 Macro 0.9888</p>
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown("### Loan & Borrower Details")
-st.caption("Enter the loan information below to assess credit risk level.")
+st.markdown("### Loan and Borrower Details")
+st.caption("For use by credit officers. Enter loan details to assess risk classification under CBN prudential guidelines.")
 
-# ── INPUTS ───────────────────────────────────────────────
+# INPUTS
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown("**👤 Borrower**")
+    st.markdown("**Borrower**")
     dob = st.date_input("Date of Birth", value=datetime(1985, 1, 1),
                         min_value=datetime(1940, 1, 1), max_value=datetime(2000, 12, 31))
     gender = st.selectbox("Gender", ["Male", "Female"])
     loan_category = st.selectbox("Loan Category", ["NEW LOAN", "TOPUP"])
 
 with col2:
-    st.markdown("**💰 Loan Terms**")
-    loan_amount = st.number_input("Loan Amount (₦)", min_value=10000, max_value=10000000,
+    st.markdown("**Loan Terms**")
+    loan_amount = st.number_input("Loan Amount (N)", min_value=10000, max_value=10000000,
                                    value=300000, step=10000)
     tenor = st.number_input("Tenor (months)", min_value=1, max_value=24, value=12)
-    monthly_installment = st.number_input("Monthly Installment (₦)", min_value=1000,
+    monthly_installment = st.number_input("Monthly Installment (N)", min_value=1000,
                                           max_value=2000000, value=40000, step=1000)
 
 st.markdown("")
 col3, col4 = st.columns(2)
 
 with col3:
-    st.markdown("**📊 Rates & Fees**")
+    st.markdown("**Rates and Fees**")
     contractual_rate = st.number_input("Contractual Rate (%)", min_value=0.0,
                                        max_value=30.0, value=4.75, step=0.1)
     rate = st.number_input("Effective Rate (%)", min_value=0.0,
                            max_value=30.0, value=7.73, step=0.1)
-    management_fee = st.number_input("Management Fee (₦)", min_value=0,
+    management_fee = st.number_input("Management Fee (N)", min_value=0,
                                      max_value=100000, value=4250, step=250)
-    monthly_maint_fee = st.number_input("Monthly Maintenance Fee (₦)", min_value=0,
+    monthly_maint_fee = st.number_input("Monthly Maintenance Fee (N)", min_value=0,
                                         max_value=10000, value=785, step=50)
 
 with col4:
-    st.markdown("**📅 Portfolio Position**")
+    st.markdown("**Portfolio Position**")
     loan_age_months = st.number_input("Months Since Disbursement", min_value=0,
                                       max_value=24, value=3)
     remaining_months = st.number_input("Months Remaining to Maturity", min_value=0,
                                        max_value=24, value=9)
-    deductions_till_date = st.number_input("Total Deductions to Date (₦)", min_value=0,
+    deductions_till_date = st.number_input("Total Deductions to Date (N)", min_value=0,
                                            max_value=5000000, value=120000, step=5000)
-    actual_dtd = st.number_input("Actual Deductions to Date (₦)", min_value=0,
+    actual_dtd = st.number_input("Actual Deductions to Date (N)", min_value=0,
                                  max_value=5000000, value=120000, step=5000)
 
 st.markdown("")
 col5, col6 = st.columns(2)
 
 with col5:
-    st.markdown("**🏦 Financials**")
-    loan_value = st.number_input("Loan Value (₦)", min_value=10000,
+    st.markdown("**Financials**")
+    loan_value = st.number_input("Loan Value (N)", min_value=10000,
                                  max_value=10000000, value=380000, step=10000)
-    total_collectable = st.number_input("Total Collectable (₦)", min_value=10000,
+    total_collectable = st.number_input("Total Collectable (N)", min_value=10000,
                                         max_value=10000000, value=488000, step=10000)
-    interest_till_date = st.number_input("Interest Accrued to Date (₦)", min_value=0,
+    interest_till_date = st.number_input("Interest Accrued to Date (N)", min_value=0,
                                          max_value=2000000, value=45000, step=1000)
 
 with col6:
-    st.markdown("**🔢 Cumulative**")
-    cumm_maint_fee = st.number_input("Cumulative Maintenance Fee (₦)", min_value=0,
+    st.markdown("**Cumulative**")
+    cumm_maint_fee = st.number_input("Cumulative Maintenance Fee (N)", min_value=0,
                                      max_value=500000, value=2355, step=100)
 
 st.markdown("")
 
-# ── PREDICT ──────────────────────────────────────────────
-if st.button("🔍 Assess Credit Risk"):
+# PREDICT
+if st.button("Assess Credit Risk"):
 
     age     = int((pd.Timestamp.today() - pd.Timestamp(dob)).days / 365.25)
     is_male = 1 if gender == "Male" else 0
-    is_topup= 1 if loan_category == "TOPUP" else 0
+    is_topup = 1 if loan_category == "TOPUP" else 0
 
     try:
         X_input = build_features(
@@ -216,20 +223,23 @@ if st.button("🔍 Assess Credit Risk"):
         )
         X_input = X_input.replace([np.inf, -np.inf], np.nan).fillna(0)
 
-        probs     = model.predict_proba(X_input)[0]
-        pred_class= int(np.argmax(probs))
+        probs      = model.predict_proba(X_input)[0]
+        pred_class = int(np.argmax(probs))
         prob_low, prob_med, prob_high = probs[0], probs[1], probs[2]
 
-        # ── Result card ──────────────────────────────────
         if pred_class == 0:
             st.markdown(f"""
             <div class="result-low">
               <div style="font-size:2.5rem">🟢</div>
               <div class="result-title" style="color:#276749">LOW RISK</div>
-              <div class="result-sub" style="color:#276749">Loan is performing within acceptable parameters</div>
-              <div class="rec-box" style="text-align:left">
+              <div class="cbn-badge cbn-low">CBN Classification: Performing</div>
+              <div class="result-sub" style="color:#276749; margin-top:0.5rem;">
+                Loan is performing within acceptable parameters
+              </div>
+              <div class="rec-box">
                 <strong>Recommendation:</strong> Loan is performing satisfactorily.
                 Continue standard monitoring cadence. No immediate action required.
+                Maintain existing repayment schedule and conduct routine periodic review.
               </div>
             </div>
             """, unsafe_allow_html=True)
@@ -239,11 +249,14 @@ if st.button("🔍 Assess Credit Risk"):
             <div class="result-medium">
               <div style="font-size:2.5rem">🟡</div>
               <div class="result-title" style="color:#92400e">MEDIUM RISK</div>
-              <div class="result-sub" style="color:#92400e">Early warning signals detected — Watchlist category</div>
-              <div class="rec-box" style="text-align:left">
-                <strong>Recommendation:</strong> Escalate to relationship manager for review.
-                Increase monitoring frequency. Consider proactive engagement with borrower
-                to restructure if delinquency trends continue.
+              <div class="cbn-badge cbn-medium">CBN Classification: Watchlist (1 / 2 / 3)</div>
+              <div class="result-sub" style="color:#92400e; margin-top:0.5rem;">
+                Early warning signals detected. Loan showing signs of deterioration.
+              </div>
+              <div class="rec-box">
+                <strong>Recommendation:</strong> Escalate to relationship manager for immediate review.
+                Increase monitoring frequency to monthly. Initiate proactive engagement with borrower.
+                Consider restructuring options if delinquency trends continue. Flag for credit committee attention.
               </div>
             </div>
             """, unsafe_allow_html=True)
@@ -253,40 +266,33 @@ if st.button("🔍 Assess Credit Risk"):
             <div class="result-high">
               <div style="font-size:2.5rem">🔴</div>
               <div class="result-title" style="color:#c53030">HIGH RISK</div>
-              <div class="result-sub" style="color:#c53030">Significant credit deterioration — Substandard / Loss category</div>
-              <div class="rec-box" style="text-align:left">
-                <strong>Recommendation:</strong> Immediate escalation to credit risk committee required.
-                Initiate recovery proceedings. Assess collateral adequacy and consider
-                provisioning in line with CBN prudential guidelines.
+              <div class="cbn-badge cbn-high">CBN Classification: Substandard / Loss / Doubtful</div>
+              <div class="result-sub" style="color:#c53030; margin-top:0.5rem;">
+                Significant credit deterioration detected. Immediate action required.
+              </div>
+              <div class="rec-box">
+                <strong>Recommendation:</strong> Escalate immediately to credit risk committee.
+                Initiate recovery and collections proceedings. Assess collateral adequacy.
+                Consider loan provisioning in line with CBN prudential guidelines (Circular BSD/DIR/GEN/LAB/07/023).
+                Halt further credit extension to this borrower pending review.
               </div>
             </div>
             """, unsafe_allow_html=True)
 
-        # ── Probability bars ──────────────────────────────
+        # Probability bars
         st.markdown("")
         st.markdown("#### Risk Probability Breakdown")
-        st.markdown(f"""
-        <div class="prob-bar-wrap">
-          <div class="prob-label"><span>🟢 Low Risk (Performing)</span><span><b>{prob_low:.1%}</b></span></div>
-        </div>
-        """, unsafe_allow_html=True)
+
+        st.markdown(f'<div class="prob-label"><span>🟢 Low Risk (Performing)</span><span><b>{prob_low:.1%}</b></span></div>', unsafe_allow_html=True)
         st.progress(float(prob_low))
 
-        st.markdown(f"""
-        <div class="prob-bar-wrap">
-          <div class="prob-label"><span>🟡 Medium Risk (Watchlist)</span><span><b>{prob_med:.1%}</b></span></div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f'<div class="prob-label"><span>🟡 Medium Risk (Watchlist 1 / 2 / 3)</span><span><b>{prob_med:.1%}</b></span></div>', unsafe_allow_html=True)
         st.progress(float(prob_med))
 
-        st.markdown(f"""
-        <div class="prob-bar-wrap">
-          <div class="prob-label"><span>🔴 High Risk (Substandard / Loss)</span><span><b>{prob_high:.1%}</b></span></div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f'<div class="prob-label"><span>🔴 High Risk (Substandard / Loss / Doubtful)</span><span><b>{prob_high:.1%}</b></span></div>', unsafe_allow_html=True)
         st.progress(float(prob_high))
 
-        # ── Key computed metrics ──────────────────────────
+        # Computed metrics
         progress_pct = (loan_age_months / tenor * 100) if tenor > 0 else 0
         repay_ratio  = deductions_till_date / total_collectable if total_collectable > 0 else 0
 
@@ -318,37 +324,43 @@ if st.button("🔍 Assess Credit Risk"):
     except Exception as e:
         st.error(f"Prediction error: {e}")
 
-# ── ABOUT ─────────────────────────────────────────────────
-with st.expander("ℹ️ About this system"):
+with st.expander("About this system"):
     st.markdown(f"""
-    **Credit Risk Early Warning System** — built as a Machine Learning class project.
+    **CreditSense** is a machine learning powered credit risk early warning system developed
+    as part of an MSc Machine Learning course project.
 
-    **Dataset:** Nigerian bank loan portfolio (Ogun State), 3,509 loan records.
+    **Dataset:** Nigerian consumer bank loan portfolio (Ogun State), 3,509 loan records.
+    Data sourced from a licensed Nigerian financial institution with permission.
 
-    **Model:** XGBoost — 3-class ordinal risk classifier.
+    **Model:** XGBoost classifier trained on 30 engineered features.
+    Class imbalance addressed using SMOTE (Synthetic Minority Oversampling Technique).
 
-    **Risk levels mirror CBN loan classification guidelines:**
-    - 🟢 **Low Risk** → Performing loans
-    - 🟡 **Medium Risk** → Watchlist 1, 2, 3 (early deterioration signals)
-    - 🔴 **High Risk** → Substandard, Loss, Doubtful
+    **CBN Risk Classification Framework:**
+    The output risk levels map directly to the Central Bank of Nigeria (CBN) prudential
+    loan classification guidelines:
 
-    **Performance (test set, 702 loans):**
+    - Performing: loans with no signs of credit deterioration
+    - Watchlist 1 / 2 / 3: loans showing early warning signs (1 to 90 days past due)
+    - Substandard: loans 90 to 180 days past due
+    - Doubtful: loans 180 to 360 days past due
+    - Loss: loans over 360 days past due or deemed unrecoverable
+
+    **Model Performance (held-out test set, 702 loans):**
     - F1 Macro: **{meta['test_f1_macro']}**
-    - AUC (One-vs-Rest): **{meta['test_auc_ovr']}**
-    - Accuracy: **99%**
+    - AUC (One vs Rest): **{meta['test_auc_ovr']}**
+    - Overall Accuracy: **99%**
 
-    **Why XGBoost?** Outperformed Logistic Regression and Random Forest on all metrics.
-    Class imbalance (2414 / 875 / 220) handled with SMOTE oversampling.
+    **Leakage prevention:** Days past due (PDOs), VAR, Months in Delinquent,
+    and Amount in Delinquent were excluded from model inputs as they are
+    computed after classification labels are assigned.
 
-    **Leakage prevention:** PDOs, VAR, Months in Delinquent, and Amount in Delinquent
-    were excluded from model features as they are derived from the classification labels.
-
-    ⚠️ For educational purposes. Based on real company data used with permission.
+    This tool is intended for use by trained credit officers as a decision support system.
+    It does not replace professional credit judgment or CBN regulatory requirements.
     """)
 
 st.markdown("""
 <div class="disclaimer">
-  Credit Risk Early Warning System · Nigerian Bank Loan Portfolio · XGBoost + SMOTE<br>
-  Built for academic purposes · Not for production lending decisions
+  CreditSense · Nigerian Consumer Lending Credit Risk EWS · XGBoost + SMOTE<br>
+  MSc Machine Learning Project · For academic and internal review purposes only
 </div>
 """, unsafe_allow_html=True)
