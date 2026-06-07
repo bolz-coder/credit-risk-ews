@@ -364,8 +364,8 @@ with st.expander("About this system"):
     **What it does:** Predicts the likely CBN risk rating of a loan based on data available
     at the point of loan origination (application time), before the loan is disbursed.
 
-    **Dataset:** Nigerian consumer bank loan portfolio (Ogun State), 3,509 loan records.
-    Data sourced from a licensed Nigerian financial institution with permission.
+    **Dataset:** Anonymized Nigerian consumer bank loan portfolio, 3,509 loan records.
+Data sourced from a licensed Nigerian financial institution with permission.
 
     **Model:** XGBoost classifier trained on 21 origination-time features only.
     Portfolio position features (deductions, days past due, etc.) were deliberately excluded
